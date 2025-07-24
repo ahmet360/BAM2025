@@ -1,2 +1,67 @@
 "node_modules/" 
 ".env"          
+# --- Python bytecode / cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Virtual envs ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Build / packaging ---
+build/
+dist/
+.eggs/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# --- Testing / coverage ---
+.pytest_cache/
+.coverage*
+htmlcov/
+.tox/
+.nox/
+
+# --- Linters / type checkers ---
+.mypy_cache/
+.pyright/
+.ruff_cache/
+.pyre/
+.pytype/
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- IDE / editors ---
+.vscode/
+.idea/
+*.code-workspace
+
+# --- OS junk ---
+.DS_Store
+Thumbs.db
+
+# --- dotenv / local config ---
+.env
+.env.*.local
+*.secret
+secrets.json
+
+# --- PyInstaller ---
+*.manifest
+*.spec
+
+# --- Logs ---
+*.log
+
+# --- SQLite / local DBs ---
+*.sqlite3
+*.db
+
+# --- Misc tools ---
+.pyre/
+coverage.xml
