@@ -1,5 +1,5 @@
 """FastAPI app for the fitness demo backend."""
-from fastapi import FastAPI, Request, HTTPException, Body, Query
+from fastapi import FastAPI, Request, HTTPException, Body, Query, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
@@ -9,14 +9,20 @@ from openai import AsyncAzureOpenAI
 from datetime import datetime, timezone
 import httpx
 import sys
-sys.path.append(r'C:/Users/ahmtt/Documents/VS/API KEY')
-from secret import AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT
+import os
+# Ensure the path to 'secret.py' is added only once and before import
+secret_path = os.path.abspath(r'C:/Users/ahmtt/Documents/VS/API KEY')
+if secret_path not in sys.path:
+    sys.path.insert(0, secret_path)
+import openai
+from secret import AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, AZURE_OPENAI_DEPLOYMENT # type: ignore
 
 import models, store, recovery, secret_loader
 from models import ChatMsg, WorkoutLog, RecoveryScore
 from store import store
 from secret_loader import load_secrets
 from recovery import calc_recovery, recommend_trainable, COMMON_MUSCLES
+import io
 
 app = FastAPI()
 
@@ -53,7 +59,7 @@ async def chat_stream(request: Request):
     async def reset_rate():
         await asyncio.sleep(10)
         store.chat_rate[uid] = max(0, store.chat_rate[uid] - 1)
-    asyncio.create_task(reset_rate())
+    _rate_task = asyncio.create_task(reset_rate())
 
     # Load secrets
     try:
@@ -116,7 +122,7 @@ async def get_recovery(uid: str = Query(...)):
         now = datetime.now(timezone.utc)
         scores = calc_recovery(logs, now)
         # Find last trained per muscle
-        last_trained = {m: None for m in COMMON_MUSCLES}
+        last_trained = dict.fromkeys(COMMON_MUSCLES, None)
         for log in logs:
             ts = log.get("ts")
             for m in log.get("muscles", []):
@@ -131,28 +137,103 @@ async def get_recovery(uid: str = Query(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to calculate recovery: {str(e)}")
 
-@app.post("/api/azure-chat")
-async def azure_chat(request: Request):
+@app.post("/chat")
+async def chat(request: Request):
+    """Chat endpoint for Azure OpenAI integration."""
     data = await request.json()
-    user_message = data.get("message")
+    user_message = data.get("message", "")
     if not user_message:
         raise HTTPException(status_code=400, detail="Message is required.")
-    headers = {
-        "api-key": AZURE_OPENAI_API_KEY,
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "messages": [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": user_message}
-        ],
-        "max_tokens": 256
-    }
-    url = f"{AZURE_OPENAI_ENDPOINT}/openai/deployments/{AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2023-03-15-preview"
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, headers=headers, json=payload)
-        if response.status_code != 200:
-            raise HTTPException(status_code=500, detail=f"Azure OpenAI error: {response.text}")
-        result = response.json()
-        ai_message = result["choices"][0]["message"]["content"]
-        return {"response": ai_message} 
+    try:
+        secrets = load_secrets()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading secrets: {str(e)}")
+    try:
+        print("Task started with Chat API")
+        client = openai.AzureOpenAI(
+            api_key=secrets.AZURE_OPENAI_API_KEY,
+            api_version="2023-05-15",
+            azure_endpoint=secrets.AZURE_OPENAI_ENDPOINT,
+        )
+        response = client.chat.completions.create(
+            model=secrets.AZURE_OPENAI_DEPLOYMENT,
+            messages=[
+                {"role": "system", "content": "You are Vitalis, a highly knowledgeable, friendly, and supportive personal AI health companion. Your mission is to help users reach, understand, and maintain their fitness goals through education, motivation, and practical advice. Always keep answers extremely concise (1-2 sentences), but make them packed with value, encouragement, and actionable tips. You specialize in fitness, nutrition, recovery, motivation, and healthy habits. When responding, always:\n- Greet the user warmly and positively.\n- Give advice that is clear, practical, and easy to follow.\n- Motivate and encourage the user to keep going, even if they face setbacks.\n- Educate the user about the science and benefits behind your advice.\n- Use simple, friendly language and avoid jargon.\n- Be empathetic, supportive, and never judgmental.\n- If the user asks about goals, progress, or struggles, offer specific encouragement and a quick tip.\n- If the user asks about workouts, nutrition, or recovery, give a short, science-backed suggestion.\n- Never give medical advice, but always encourage healthy habits and consulting professionals for serious issues.\n- End every reply with a positive, motivational note.\nYou are always super friendly, energetic, and focused on helping the user succeed in their health journey."},
+                {"role": "user", "content": user_message}
+            ],
+            max_tokens=128,
+            temperature=0.7
+        )
+        ai_message = response.choices[0].message.content
+        print("Task complete Chat API")
+        return {"response": ai_message}
+    except Exception as e:
+        print("Chat exception:", e)
+        raise HTTPException(status_code=500, detail=f"Error from OpenAI: {str(e)}")
+
+@app.get("/voice-assistant")
+async def voice_assistant():
+    """Return a predefined workout voice assistant flow with messages and durations."""
+    # Simple 1-2 minute workout sequence
+    steps = [
+        {"message": "Warm up! March in place for 30 seconds.", "duration": 30},
+        {"message": "Do jumping jacks for 30 seconds. Keep moving!", "duration": 30},
+        {"message": "Take a 10-second rest and breathe deeply.", "duration": 10},
+        {"message": "Perform push-ups for 30 seconds. You got this!", "duration": 30},
+        {"message": "Cool down with gentle stretches for 20 seconds.", "duration": 20},
+    ]
+    return {"steps": steps}
+ 
+# Speech-to-Text endpoint: convert user audio to text
+@app.post("/speech-to-text")
+async def speech_to_text(file: UploadFile = File(...)):
+    """Convert uploaded audio file to text via Azure Speech API."""
+    try:
+        secrets = load_secrets()
+        audio_bytes = await file.read()
+        # Use STT credentials and endpoint
+        headers = {
+            'Ocp-Apim-Subscription-Key': secrets.AZURE_SPEECH_STT_KEY,
+            'Ocp-Apim-Subscription-Region': secrets.AZURE_SPEECH_STT_REGION,
+            'Content-Type': 'application/octet-stream',
+        }
+        print("Task started with Speech-to-Text API")
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(secrets.AZURE_SPEECH_STT_ENDPOINT, content=audio_bytes, headers=headers)
+        resp.raise_for_status()
+        print("Task complete Speech-to-Text API")
+        data = resp.json()
+        text = data.get('DisplayText') or data.get('text', '')
+        return {'text': text}
+    except Exception as e:
+        print("Speech-to-text exception:", e)
+        raise HTTPException(status_code=500, detail=f"Speech-to-text error: {str(e)}")
+
+# Text-to-Speech endpoint: convert AI text response to audio
+@app.post("/text-to-speech")
+async def text_to_speech(body: dict = Body(...)):
+    """Convert provided text to speech audio via Azure TTS API."""
+    try:
+        text = body.get('text', '')
+        secrets = load_secrets()
+        # Use TTS credentials and endpoint
+        tts_url = secrets.AZURE_SPEECH_TTS_ENDPOINT
+        ssml = (
+            """<speak version='1.0' xml:lang='en-US'>"""
+            f"<voice xml:lang='en-US' xml:gender='Female' name='en-US-JennyNeural'>{text}</voice>"
+            """</speak>"""
+        )
+        headers = {
+            'Ocp-Apim-Subscription-Key': secrets.AZURE_SPEECH_TTS_KEY,
+            'Ocp-Apim-Subscription-Region': secrets.AZURE_SPEECH_TTS_REGION,
+            'Content-Type': 'application/ssml+xml',
+            'X-Microsoft-OutputFormat': 'audio-16khz-64kbitrate-mono-mp3'
+        }
+        print("Task started with Text-to-Speech API")
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(tts_url, content=ssml.encode('utf-8'), headers=headers)
+        resp.raise_for_status()
+        print("Task complete Text-to-Speech API")
+        return StreamingResponse(io.BytesIO(resp.content), media_type='audio/mpeg')
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Text-to-speech error: {str(e)}")

@@ -1,3 +1,25 @@
+/* Toggle Recording Button */
+.record-btn {
+  background: #d32f2f;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(211,47,47,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.record-btn:hover {
+  background: #c62828;
+}
+.record-btn.recording {
+  background: #b71c1c;
+}
 body {
   background: #e9e9f3;
   min-height: 100vh;
@@ -197,6 +219,49 @@ body {
   display: block;
   transition: width 0.18s, height 0.18s;
 }
+/* Live Voice Chat */
+.voice-btn {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(25,118,210,0.3);
+  transition: background 0.2s;
+}
+.voice-btn:hover {
+  background: #1565c0;
+}
+.voice-bubble-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.voice-bubble {
+  width: 60px;
+  height: 60px;
+  background: #e3f2fd;
+  border-radius: 50%;
+  position: relative;
+}
+.voice-bubble .pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background: rgba(25,118,210,0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 1s infinite;
+}
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.8; }
+  50% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+}
 
 .bar-img.gif-active {
   width: 34px;
@@ -261,4 +326,36 @@ body {
 }
 .chat-slideup-panel.open {
   transform: translateY(0);
-} 
+}
+
+.health-metric {
+  animation: healthMetricPulse 2s ease-in-out infinite;
+}
+
+@keyframes healthMetricPulse {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  50% { 
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.15);
+  }
+}
+
+@keyframes musclePulse {
+  0%, 100% { 
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.4;
+    transform: scale(1.05);
+  }
+}
+
+.health-metric:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(25, 118, 210, 0.2);
+  transition: all 0.2s ease;
+}

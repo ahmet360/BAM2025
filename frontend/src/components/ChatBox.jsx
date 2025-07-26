@@ -8,7 +8,6 @@ export default function ChatBox() {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const chatRef = useRef(null);
-    const systemPrompt = "You are a concise, friendly fitness advisor. Give short, actionable advice about exercise, recovery, and nutrition.";
 
     // Scroll to bottom on new message
     React.useEffect(() => {
@@ -26,13 +25,13 @@ export default function ChatBox() {
         setLoading(true);
         setMessages((msgs) => [...msgs, { role: "assistant", content: "" }]);
         try {
-            const aiReply = await api.chatWithAzure(`${systemPrompt}\nUser: ${input}`);
+            const aiReply = await api.chatWithAzure(input);
             setMessages((msgs) => {
                 const out = [...msgs];
                 out[out.length - 1] = { role: "assistant", content: aiReply };
                 return out;
             });
-        } catch (err) {
+        } catch {
             setMessages((msgs) => {
                 const out = [...msgs];
                 out[out.length - 1] = { role: "assistant", content: "[Error: failed to connect to AI]" };

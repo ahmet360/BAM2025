@@ -31,7 +31,7 @@ const api = {
         return res.json();
     },
     async chatWithAzure(message) {
-        const res = await fetch("/api/azure-chat", {
+        const res = await fetch("/chat", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ message }),

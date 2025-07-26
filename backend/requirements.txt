@@ -2,4 +2,5 @@ fastapi
 uvicorn
 pydantic
 azure-ai-ml
-python-dotenv 
+python-dotenv
+python-multipart
