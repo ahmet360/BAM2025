@@ -187,24 +187,31 @@ async def voice_assistant():
 # Speech-to-Text endpoint: convert user audio to text
 @app.post("/speech-to-text")
 async def speech_to_text(file: UploadFile = File(...)):
-    """Convert uploaded audio file to text via Azure Speech API."""
+    """Convert uploaded audio file to text via Azure OpenAI Whisper."""
     try:
         secrets = load_secrets()
-        audio_bytes = await file.read()
-        # Use STT credentials and endpoint
-        headers = {
-            'Ocp-Apim-Subscription-Key': secrets.AZURE_SPEECH_STT_KEY,
-            'Ocp-Apim-Subscription-Region': secrets.AZURE_SPEECH_STT_REGION,
-            'Content-Type': 'application/octet-stream',
+        audio_content = await file.read()
+        
+        # Use the direct endpoint from your secret.py
+        stt_url = secrets.AZURE_SPEECH_STT_ENDPOINT
+        
+        files = {
+            'file': (file.filename, audio_content, file.content_type)
         }
+        headers = {
+            'api-key': secrets.AZURE_SPEECH_STT_KEY
+        }
+        
         print("Task started with Speech-to-Text API")
         async with httpx.AsyncClient() as client:
-            resp = await client.post(secrets.AZURE_SPEECH_STT_ENDPOINT, content=audio_bytes, headers=headers)
+            resp = await client.post(stt_url, files=files, headers=headers)
         resp.raise_for_status()
         print("Task complete Speech-to-Text API")
-        data = resp.json()
-        text = data.get('DisplayText') or data.get('text', '')
-        return {'text': text}
+        
+        result = resp.json()
+        transcribed_text = result.get('text', '')
+        return {"transcription": transcribed_text}
+        
     except Exception as e:
         print("Speech-to-text exception:", e)
         raise HTTPException(status_code=500, detail=f"Speech-to-text error: {str(e)}")
@@ -212,28 +219,38 @@ async def speech_to_text(file: UploadFile = File(...)):
 # Text-to-Speech endpoint: convert AI text response to audio
 @app.post("/text-to-speech")
 async def text_to_speech(body: dict = Body(...)):
-    """Convert provided text to speech audio via Azure TTS API."""
+    """Convert provided text to speech audio via Azure OpenAI TTS."""
     try:
         text = body.get('text', '')
+        if not text:
+            raise HTTPException(status_code=400, detail="No text provided")
+        
         secrets = load_secrets()
-        # Use TTS credentials and endpoint
+        
+        # Use the direct endpoint from your secret.py
         tts_url = secrets.AZURE_SPEECH_TTS_ENDPOINT
-        ssml = (
-            """<speak version='1.0' xml:lang='en-US'>"""
-            f"<voice xml:lang='en-US' xml:gender='Female' name='en-US-JennyNeural'>{text}</voice>"
-            """</speak>"""
-        )
-        headers = {
-            'Ocp-Apim-Subscription-Key': secrets.AZURE_SPEECH_TTS_KEY,
-            'Ocp-Apim-Subscription-Region': secrets.AZURE_SPEECH_TTS_REGION,
-            'Content-Type': 'application/ssml+xml',
-            'X-Microsoft-OutputFormat': 'audio-16khz-64kbitrate-mono-mp3'
+        
+        payload = {
+            "model": "gpt-4o-mini-tts",
+            "input": text,
+            "voice": "alloy"
         }
+        headers = {
+            'api-key': secrets.AZURE_SPEECH_TTS_KEY,
+            'Content-Type': 'application/json'
+        }
+        
         print("Task started with Text-to-Speech API")
         async with httpx.AsyncClient() as client:
-            resp = await client.post(tts_url, content=ssml.encode('utf-8'), headers=headers)
+            resp = await client.post(tts_url, json=payload, headers=headers)
         resp.raise_for_status()
         print("Task complete Text-to-Speech API")
-        return StreamingResponse(io.BytesIO(resp.content), media_type='audio/mpeg')
+        
+        # Return the audio as base64
+        import base64
+        audio_base64 = base64.b64encode(resp.content).decode('utf-8')
+        return {"audio": audio_base64}
+        
     except Exception as e:
+        print("Text-to-speech exception:", e)
         raise HTTPException(status_code=500, detail=f"Text-to-speech error: {str(e)}")

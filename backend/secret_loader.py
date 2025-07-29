@@ -10,9 +10,11 @@ class Secret:
     AZURE_OPENAI_DEPLOYMENT: str = ""
     AZURE_OPENAI_API_KEY: str = ""
     AZURE_OPENAI_ENDPOINT: str = ""
+    AZURE_OPENAI_SPEECH_STT_DEPLOYMENT: str = ""
     AZURE_SPEECH_STT_KEY: str = ""
     AZURE_SPEECH_STT_ENDPOINT: str = ""
     AZURE_SPEECH_STT_REGION: str = ""
+    AZURE_OPENAI_SPEECH_TTS_DEPLOYMENT: str = ""
     AZURE_SPEECH_TTS_KEY: str = ""
     AZURE_SPEECH_TTS_ENDPOINT: str = ""
     AZURE_SPEECH_TTS_REGION: str = ""
@@ -31,9 +33,11 @@ def load_secrets() -> Secret:
         s.AZURE_OPENAI_DEPLOYMENT = getattr(secret, "AZURE_OPENAI_DEPLOYMENT", "")
         s.AZURE_OPENAI_API_KEY = getattr(secret, "AZURE_OPENAI_API_KEY", "")
         s.AZURE_OPENAI_ENDPOINT = getattr(secret, "AZURE_OPENAI_ENDPOINT", "")
+        s.AZURE_OPENAI_SPEECH_STT_DEPLOYMENT = getattr(secret, "AZURE_OPENAI_SPEECH_STT_DEPLOYMENT", "")
         s.AZURE_SPEECH_STT_KEY = getattr(secret, "AZURE_SPEECH_STT_KEY", "")
         s.AZURE_SPEECH_STT_ENDPOINT = getattr(secret, "AZURE_SPEECH_STT_ENDPOINT", "")
         s.AZURE_SPEECH_STT_REGION = getattr(secret, "AZURE_SPEECH_STT_REGION", "")
+        s.AZURE_OPENAI_SPEECH_TTS_DEPLOYMENT = getattr(secret, "AZURE_OPENAI_SPEECH_TTS_DEPLOYMENT", "")
         s.AZURE_SPEECH_TTS_KEY = getattr(secret, "AZURE_SPEECH_TTS_KEY", "")
         s.AZURE_SPEECH_TTS_ENDPOINT = getattr(secret, "AZURE_SPEECH_TTS_ENDPOINT", "")
         s.AZURE_SPEECH_TTS_REGION = getattr(secret, "AZURE_SPEECH_TTS_REGION", "")
@@ -41,12 +45,8 @@ def load_secrets() -> Secret:
             s.AZURE_OPENAI_DEPLOYMENT,
             s.AZURE_OPENAI_API_KEY,
             s.AZURE_OPENAI_ENDPOINT,
-            s.AZURE_SPEECH_STT_KEY,
-            s.AZURE_SPEECH_STT_ENDPOINT,
-            s.AZURE_SPEECH_STT_REGION,
-            s.AZURE_SPEECH_TTS_KEY,
-            s.AZURE_SPEECH_TTS_ENDPOINT,
-            s.AZURE_SPEECH_TTS_REGION,
+            s.AZURE_OPENAI_SPEECH_STT_DEPLOYMENT,
+            s.AZURE_OPENAI_SPEECH_TTS_DEPLOYMENT,
         ]):
             raise RuntimeError("secret.py is missing required fields. Please check your credentials.")
         return s
