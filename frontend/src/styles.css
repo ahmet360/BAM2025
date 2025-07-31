@@ -70,27 +70,115 @@ body {
 
 .phone-inner {
   position: absolute;
-  top: 68px;
+  top: 22px;
   left: 0;
   width: 100%;
-  height: calc(100% - 68px);
+  height: calc(100% - 22px);
   background: #fff;
   border-radius: 0 0 32px 32px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 8px rgba(0,0,0,0);
 }
 
 .dummy-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
   color: #333;
-  gap: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Phone Status Bar Styles - Easy to edit in inspect element */
+.phone-status-bar {
+  /* Main status bar container - modify height, background, etc. */
+  transition: all 0.2s ease;
+}
+
+#phone-status-bar {
+  /* Specific ID for targeting in inspect element */
+  position: relative;
+}
+
+.status-bar-left {
+  /* Left side of status bar (time) */
+  flex-shrink: 0;
+}
+
+.status-bar-right {
+  /* Right side of status bar (battery, signals) */
+  flex-shrink: 0;
+}
+
+.status-time {
+  /* Time display */
+  font-variant-numeric: tabular-nums;
+}
+
+.signal-icon, .wifi-icon, .battery-icon {
+  /* Signal and battery icons */
+  display: inline-block;
+}
+
+.battery-percentage {
+  /* Battery percentage text */
+  font-variant-numeric: tabular-nums;
+}
+
+/* Settings Navigation Buttons */
+.settings-nav-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.settings-nav-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: left 0.5s;
+}
+
+.settings-nav-btn:hover::before {
+  left: 100%;
+}
+
+.settings-nav-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(25, 118, 210, 0.15) !important;
+}
+
+.settings-nav-btn:active {
+  transform: translateY(0);
+}
+
+/* Settings Page Enhancement */
+.settings-page {
+  position: relative;
+}
+
+.settings-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1976d2, #42a5f5, #90caf9, #42a5f5, #1976d2);
+  background-size: 200% 100%;
+  animation: settingsGlow 3s ease-in-out infinite;
+  border-radius: 18px 18px 0 0;
+}
+
+@keyframes settingsGlow {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 0%; }
 }
 
 .settings-btn {
