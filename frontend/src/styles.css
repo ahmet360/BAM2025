@@ -181,6 +181,18 @@ body {
   50% { background-position: 100% 0%; }
 }
 
+/* Voice Chat Animations */
+@keyframes audioWave {
+  0% { transform: scaleY(0.3); }
+  100% { transform: scaleY(1); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.1); opacity: 0.3; }
+  100% { transform: scale(1); opacity: 0.7; }
+}
+
 .settings-btn {
   position: absolute;
   top: 12px;
@@ -356,7 +368,7 @@ body {
   height: 34px;
 }
 
-.settings-page {
+.settings-content {
   flex: 1;
   display: flex;
   flex-direction: column;

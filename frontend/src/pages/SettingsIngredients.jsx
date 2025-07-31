@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import './settings.css';
 
-export default function SettingsIngredients({ ingredients = [], setIngredients = () => {} }) {
+export default function SettingsIngredients({ ingredients = [], setIngredients = () => { } }) {
     const [newIngredient, setNewIngredient] = useState('');
 
     function handleAdd(e) {
@@ -20,11 +20,11 @@ export default function SettingsIngredients({ ingredients = [], setIngredients =
         <div className="settings-content">
             <h3 className="settings-subtitle">My Ingredients</h3>
             <p className="settings-desc">Manage the ingredients you have at home to get better recipe suggestions.</p>
-            
-            <div style={{ 
-                background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%)', 
-                padding: '12px 16px', 
-                borderRadius: '12px', 
+
+            <div style={{
+                background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%)',
+                padding: '12px 16px',
+                borderRadius: '12px',
                 marginBottom: '20px',
                 border: '1px solid #c8e6c9'
             }}>
@@ -55,13 +55,13 @@ export default function SettingsIngredients({ ingredients = [], setIngredients =
                     </li>
                 ))}
             </ul>
-            
+
             {ingredients.length === 0 && (
-                <div style={{ 
-                    textAlign: 'center', 
-                    padding: '32px 16px', 
-                    color: '#666', 
-                    fontStyle: 'italic' 
+                <div style={{
+                    textAlign: 'center',
+                    padding: '32px 16px',
+                    color: '#666',
+                    fontStyle: 'italic'
                 }}>
                     <div style={{ fontSize: '48px', marginBottom: '12px' }}>🥬</div>
                     <p>No ingredients yet!</p>
